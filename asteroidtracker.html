@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script type='text/javascript' src='config.js'></script>
+</head>
+<body>
+    <input type="date" id="startDate" />
+    <button id="button">Get NEOs</button>
+
+    <div id="display"></div>
+
+    <script>
+        var nasaKey = config.NASA_KEY;
+
+        document.getElementById('button').addEventListener('click', function(){
+            let startDate = document.getElementById('startDate').value;
+
+            if(startDate.length > 0){
+                    let xhr = new XMLHttpRequest();
+
+                    xhr.open('GET', 'https://api.nasa.gov/neo/rest/v1/feed?start_date=' 
+                                    + startDate + '&end_date=' + startDate 
+                                    + '&api_key=' + nasaKey, true);
+
+                    xhr.onload = function(){
+                        if(this.status == 200){
+                            let parsedData = JSON.parse(xhr.responseText);
+                            let asteroidCount = parsedData.element_count;
+                            let asteroids = parsedData.near_earth_objects;
+
+                            let asteroidDisplay = "<h3>" 
+                                                    + asteroidCount 
+                                                    + " Near Earth Objects on the date of " + startDate + "</h3>";
+                            
+                            let asteroidObj = asteroids[startDate];
+                            
+                            asteroidObj.forEach(function(asteroid){
+                                let averageEstimatedDiameter = ( asteroid['estimated_diameter']['meters'].estimated_diameter_min + asteroid['estimated_diameter']['meters'].estimated_diameter_max ) / 2;
+                                
+                                asteroidDisplay += "<p><strong>Name:</strong> " + asteroid.name + "</p>";
+                                asteroidDisplay += "<p>" + asteroid.name + " is estimated at "
+                                                    + averageEstimatedDiameter + " meters in diameter</p>";
+                                if(asteroid.is_potentially_hazardous_asteroid){
+                                    asteroidDisplay += "<p>THIS ASTEROID IS POTENTIALLY HAZARDOUS!!!!!</p>";
+                                }else{
+                                    asteroidDisplay += "<p>This asteroid is not potentially hazardous</p>";
+                                }
+                                asteroidDisplay += "<p><strong>Missed Earth by:</strong> " + asteroid['close_approach_data'][0]['miss_distance'].miles + " miles</p>";
+                                asteroidDisplay += "<p><strong>Speed:</strong> " + asteroid['close_approach_data'][0]['relative_velocity'].miles_per_hour + "mph</p><hr />";
+
+                            })
+                            console.log(asteroidObj);
+                            document.getElementById('display').innerHTML = asteroidDisplay;
+
+                        }else{
+                            console.log("You Fail!!!!");
+                        }
+                    };
+
+                    xhr.send();
+                }
+        })
+    </script>
+</body>
+</html>
